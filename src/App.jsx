@@ -1172,7 +1172,9 @@ const ReportGeneratorInterface = () => {
           {/* Instructions */}
           <div className="mt-8 bg-gray-800 rounded-xl shadow-lg p-6">
             <p className="text-white mb-4">
-              BiSO stands for Bilan de la Science Ouverte (open-science report)
+              Currently, you can generate an open-science report from an HAL collection.
+              This web application is used to create the BiSO at the Université Paris-Saclay.
+              BiSO stands for Bilan de la Science Ouverte (open-science report).
             </p>
             <h3 className="text-xl font-semibold text-white mb-4">How it works:</h3>
             <div className="space-y-3 text-white">
@@ -1203,7 +1205,7 @@ const ReportGeneratorInterface = () => {
               </a>
             </p>
             <a
-              href="https://github.com/dibiso-upsaclay/biso-web-app"
+              href="https://github.com/dibiso-upsaclay/dibiso-reporting-webapp"
               target="_blank"
               rel="noopener noreferrer"
               className="absolute right-4 text-sm text-gray-400 hover:text-gray-500 flex items-center"
