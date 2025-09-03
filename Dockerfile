@@ -12,6 +12,7 @@ COPY postcss.config.js postcss.config.js
 COPY tailwind.config.js tailwind.config.js
 COPY vite.config.js vite.config.js
 COPY src src
+COPY .env .env
 
 RUN npm run build
 

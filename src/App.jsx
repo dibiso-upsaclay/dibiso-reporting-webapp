@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Archive, CheckCircle, Download, FileText, Github, Loader2, XCircle, Lock, UserPlus, LogIn, User, LogOut, Settings } from 'lucide-react';
 
-const API_BASE_URL = 'http://localhost:8000';
+const API_BASE_URL = import.meta.env.VITE_API_URL
 
 const ReportGeneratorInterface = () => {
   const [isCompiling, setIsCompiling] = useState(false);
