@@ -19,7 +19,7 @@ RUN npm run build
 FROM nginx:alpine
 
 LABEL org.opencontainers.image.source="https://github.com/dibiso-upsaclay/dibiso-reporting-webapp"
-LABEL org.opencontainers.image.licenses="MIT
+LABEL org.opencontainers.image.licenses="MIT"
 LABEL org.opencontainers.image.authors="Romain THOMAS <contact@romainthomas.net>"
 LABEL org.opencontainers.image.title="DiBISO reporting webapp"
 
