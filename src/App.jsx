@@ -7,10 +7,10 @@ const ReportGeneratorInterface = () => {
   const [isCompiling, setIsCompiling] = useState(false);
   const [compilationResult, setCompilationResult] = useState(null);
   const [error, setError] = useState(null);
-  const [isDownloading, setIsDownloading] = useState({ pdf: false, zip: false });
   const [compilationId, setCompilationId] = useState(null);
   const [polling, setPolling] = useState(false);
   const [compilationStatus, setCompilationStatus] = useState(null);
+  const [isDownloading, setIsDownloading] = useState({ pdf: false, zip: false, biblio: false });
   // Authentication state
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
@@ -455,13 +455,24 @@ const ReportGeneratorInterface = () => {
     }
   };
 
-  const handleDownload = async (type) => {
+  const handleDownload = async (type, fileName = null) => {
     if (!compilationResult) return;
     setIsDownloading(prev => ({ ...prev, [type]: true }));
     try {
-      const url = type === 'pdf'
-        ? `${API_BASE_URL}/download-pdf?temp_id=${compilationResult.temp_id}`
-        : `${API_BASE_URL}/download-zip?temp_id=${compilationResult.temp_id}`;
+      let url;
+      let downloadFileName;
+
+      const filePrefix = `${formData.year}_${formData.labAcronym}`;
+
+      if (type === 'pdf') {
+        const fileParam = fileName || 'report';
+        url = `${API_BASE_URL}/download-pdf?temp_id=${compilationResult.temp_id}&file_name=${fileParam}`;
+        downloadFileName = fileName === 'biblio' ? `${filePrefix}_bibliography.pdf` : `${filePrefix}_report.pdf`;
+      } else {
+        url = `${API_BASE_URL}/download-zip?temp_id=${compilationResult.temp_id}`;
+        downloadFileName = `${filePrefix}_latex_project.zip`;
+      }
+      
       const response = await fetch(url, {
         headers: {
           'Authorization': `Bearer ${token}`
@@ -474,7 +485,7 @@ const ReportGeneratorInterface = () => {
       const downloadUrl = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = downloadUrl;
-      link.download = type === 'pdf' ? 'document.pdf' : 'latex_project.zip';
+      link.download = downloadFileName;
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -1110,18 +1121,18 @@ const ReportGeneratorInterface = () => {
                 <h3 className="text-xl font-semibold text-white mb-4 text-center">
                   Download Files
                 </h3>
-                <div className="grid md:grid-cols-2 gap-4 mb-6">
-                  {/* PDF Download */}
+                <div className="grid md:grid-cols-3 gap-4 mb-6">
+                  {/* Report PDF Download */}
                   <div className="bg-gray-700 p-6 rounded-lg border border-gray-600 flex flex-col">
                     <div className="flex items-center mb-3">
                       <FileText className="w-6 h-6 text-red-500 mr-2" />
-                      <h4 className="font-semibold text-white">PDF Document</h4>
+                      <h4 className="font-semibold text-white">Report PDF</h4>
                     </div>
                     <p className="text-gray-300 mb-4 text-sm flex-grow">
-                      Download the compiled PDF document
+                      Download the compiled report PDF document
                     </p>
                     <button
-                      onClick={() => handleDownload('pdf')}
+                      onClick={() => handleDownload('pdf', 'report')}
                       disabled={isDownloading.pdf}
                       className="w-full bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white font-medium py-2 px-4 rounded-md transition duration-300 flex items-center justify-center space-x-2 mt-auto"
                     >
@@ -1133,7 +1144,34 @@ const ReportGeneratorInterface = () => {
                       ) : (
                         <>
                           <Download className="w-4 h-4" />
-                          <span>Download PDF</span>
+                          <span>Download Report</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                  {/* Bibliography PDF Download */}
+                  <div className="bg-gray-700 p-6 rounded-lg border border-gray-600 flex flex-col">
+                    <div className="flex items-center mb-3">
+                      <FileText className="w-6 h-6 text-blue-500 mr-2" />
+                      <h4 className="font-semibold text-white">Bibliography PDF</h4>
+                    </div>
+                    <p className="text-gray-300 mb-4 text-sm flex-grow">
+                      Download the bibliography PDF document
+                    </p>
+                    <button
+                      onClick={() => handleDownload('pdf', 'biblio')}
+                      disabled={isDownloading.biblio}
+                      className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-medium py-2 px-4 rounded-md transition duration-300 flex items-center justify-center space-x-2 mt-auto"
+                    >
+                      {isDownloading.biblio ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <span>Downloading...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Download className="w-4 h-4" />
+                          <span>Download Bibliography</span>
                         </>
                       )}
                     </button>
