@@ -539,7 +539,7 @@ const ReportGeneratorInterface = () => {
               Generate the open-science report for a given year and HAL collection.
             </p>
             {/* Authentication Controls */}
-            <div className="mt-4 flex justify-center space-x-4">
+            <div className="mt-4 flex justify-center">
               {!isAuthenticated ? (
                 <>
                   <button
@@ -553,34 +553,38 @@ const ReportGeneratorInterface = () => {
                   </button>
                 </>
               ) : (
-                <div className="flex items-center space-x-4">
-                  <div className="flex items-center text-white">
+                <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4">
+                  <div className="flex items-center text-white mb-2 sm:mb-0">
                     <User className="w-5 h-5 mr-2" />
                     <span>Welcome, {currentUser?.username}</span>
                   </div>
-                  <button
-                    onClick={() => setShowChangePassword(true)}
-                    className="flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition duration-300"
-                  >
-                    <Lock className="w-4 h-4 mr-2" />
-                    Change Password
-                  </button>
-                  {currentUser?.role === 'admin' && (
+                  <div className="flex flex-wrap items-center justify-center gap-2">
                     <button
-                      onClick={() => setShowAdminPanel(!showAdminPanel)}
-                      className="flex items-center justify-center bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-md transition duration-300"
+                      onClick={() => setShowChangePassword(true)}
+                      className="flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-3 sm:px-4 rounded-md transition duration-300 text-sm"
                     >
-                      <Settings className="w-4 h-4 mr-2" />
-                      Admin Panel
+                      <Lock className="w-4 h-4 mr-1 sm:mr-2" />
+                      <span className="hidden sm:inline">Change Password</span>
+                      <span className="sm:hidden">Password</span>
                     </button>
-                  )}
-                  <button
-                    onClick={handleLogout}
-                    className="flex items-center justify-center bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-md transition duration-300"
-                  >
-                    <LogOut className="w-4 h-4 mr-2" />
-                    Logout
-                  </button>
+                    {currentUser?.role === 'admin' && (
+                      <button
+                        onClick={() => setShowAdminPanel(!showAdminPanel)}
+                        className="flex items-center justify-center bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-3 sm:px-4 rounded-md transition duration-300 text-sm"
+                      >
+                        <Settings className="w-4 h-4 mr-1 sm:mr-2" />
+                        <span className="hidden sm:inline">Admin Panel</span>
+                        <span className="sm:hidden">Admin</span>
+                      </button>
+                    )}
+                    <button
+                      onClick={handleLogout}
+                      className="flex items-center justify-center bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-3 sm:px-4 rounded-md transition duration-300 text-sm"
+                    >
+                      <LogOut className="w-4 h-4 mr-1 sm:mr-2" />
+                      Logout
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
