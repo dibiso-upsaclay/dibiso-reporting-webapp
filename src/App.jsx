@@ -370,6 +370,25 @@ const ReportGeneratorInterface = () => {
     }
   };
 
+  const handleDeleteUser = async (userId) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/admin/users/${userId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Failed to delete user');
+      }
+      alert('User deleted successfully!');
+      fetchUsers();
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
   const pollCompilationStatus = async (compId) => {
     try {
       const response = await fetch(`${API_BASE_URL}/compilation-status/${compId}`, {
@@ -922,6 +941,16 @@ const ReportGeneratorInterface = () => {
                                 className="bg-blue-600 hover:bg-blue-700 px-2 py-1 rounded text-sm"
                               >
                                 Change Password
+                              </button>
+                              <button
+                                onClick={() => {
+                                  if (confirm(`Are you sure you want to permanently delete user "${user.username}"? This action cannot be undone.`)) {
+                                    handleDeleteUser(user.id);
+                                  }
+                                }}
+                                className="bg-red-800 hover:bg-red-900 px-2 py-1 rounded text-sm"
+                              >
+                                Delete
                               </button>
                             </td>
                           </tr>
