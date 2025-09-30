@@ -1103,7 +1103,7 @@ const ReportGeneratorInterface = () => {
                 <div className="flex items-center mb-4">
                   <Loader2 className="w-5 h-5 animate-spin text-blue-500 mr-2" />
                   <p className="text-blue-700 font-medium">
-                    {isCompiling ? 'Starting compilation...' : 'Compilation in progress...'}
+                    {isCompiling ? 'Starting the report generation...' : 'Generating the report...'}
                   </p>
                 </div>
                 {compilationStatus && (
