@@ -1034,13 +1034,13 @@ const ReportGeneratorInterface = () => {
                       The laboratory name that will be displayed on the title page.
                     </span>
                   </label>
-                  <input
-                    type="text"
+                  <textarea
                     id="labName"
                     name="labName"
                     value={formData.labName}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                    rows={5}
+                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent resize-vertical"
                     placeholder="e.g., Laboratory Example"
                   />
                 </div>
@@ -1177,7 +1177,7 @@ const ReportGeneratorInterface = () => {
                       ) : (
                         <>
                           <Download className="w-4 h-4" />
-                          <span>Download Report</span>
+                          <span>Report</span>
                         </>
                       )}
                     </button>
@@ -1204,7 +1204,7 @@ const ReportGeneratorInterface = () => {
                       ) : (
                         <>
                           <Download className="w-4 h-4" />
-                          <span>Download Bibliography</span>
+                          <span>Bibliography</span>
                         </>
                       )}
                     </button>
@@ -1231,7 +1231,7 @@ const ReportGeneratorInterface = () => {
                       ) : (
                         <>
                           <Download className="w-4 h-4" />
-                          <span>Download ZIP</span>
+                          <span>ZIP</span>
                         </>
                       )}
                     </button>
