@@ -1039,7 +1039,7 @@ const ReportGeneratorInterface = () => {
                     name="labName"
                     value={formData.labName}
                     onChange={handleInputChange}
-                    rows={5}
+                    rows={3}
                     className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent resize-vertical"
                     placeholder="e.g., Laboratory Example"
                   />
