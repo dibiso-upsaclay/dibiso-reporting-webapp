@@ -401,22 +401,60 @@ const ReportGeneratorInterface = () => {
       }
       const status = await response.json();
       setCompilationStatus(status);
+      
       if (status.status === 'completed') {
         setPolling(false);
-        const resultResponse = await fetch(`${API_BASE_URL}/compilation-result/${compId}`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
+        try {
+          const resultResponse = await fetch(`${API_BASE_URL}/compilation-result/${compId}`, {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+          if (!resultResponse.ok) {
+            throw new Error('Failed to fetch compilation result');
           }
-        });
-        if (!resultResponse.ok) {
-          throw new Error('Failed to fetch compilation result');
+          const result = await resultResponse.json();
+          setCompilationResult({ ...result, status: 'completed' });
+        } catch (err) {
+          setError(`Failed to fetch result: ${err.message}`);
         }
-        const result = await resultResponse.json();
-        setCompilationResult(result);
+        setCompilationStatus(null);
+      } else if (status.status === 'partial') {
+        setPolling(false);
+        // For partial status, try to get the result but handle failure gracefully
+        try {
+          const resultResponse = await fetch(`${API_BASE_URL}/compilation-result/${compId}`, {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+          if (resultResponse.ok) {
+            const result = await resultResponse.json();
+            setCompilationResult({ ...result, status: 'partial' });
+          } else {
+            // If result endpoint fails, create a minimal result object for partial success
+            setCompilationResult({
+              status: 'partial',
+              message: 'Data fetching completed successfully, but PDF compilation failed or timed out. ZIP archive is available for download.',
+              compilation_id: compId,
+              zip_available: true,
+              pdf_available: false
+            });
+          }
+        } catch (err) {
+          // If result endpoint is not accessible, create a minimal result object
+          setCompilationResult({
+            status: 'partial',
+            message: 'Data fetching completed successfully, but PDF compilation failed or timed out. ZIP archive is available for download.',
+            compilation_id: compId,
+            zip_available: true,
+            pdf_available: false
+          });
+        }
         setCompilationStatus(null);
       } else if (status.status === 'failed') {
         setPolling(false);
-        setError(status.current_step || 'Compilation failed'); // Modified line
+        setError(status.current_step || 'Compilation failed');
         setCompilationStatus(null);
       } else if (status.status === 'cancelled') {
         setPolling(false);
@@ -482,16 +520,17 @@ const ReportGeneratorInterface = () => {
       let downloadFileName;
 
       const filePrefix = `${formData.year}_${formData.labAcronym}`;
+      const downloadId = compilationResult.temp_id || compilationId; // Fallback to compilationId
 
       if (type === 'pdf') {
         const fileParam = fileName || 'report';
-        url = `${API_BASE_URL}/download-pdf?temp_id=${compilationResult.temp_id}&file_name=${fileParam}`;
+        url = `${API_BASE_URL}/download-pdf?temp_id=${downloadId}&file_name=${fileParam}`;
         downloadFileName = fileName === 'biblio' ? `${filePrefix}_bibliography.pdf` : `${filePrefix}_report.pdf`;
       } else {
-        url = `${API_BASE_URL}/download-zip?temp_id=${compilationResult.temp_id}`;
+        url = `${API_BASE_URL}/download-zip?temp_id=${downloadId}`;
         downloadFileName = `${filePrefix}_latex_project.zip`;
       }
-      
+
       const response = await fetch(url, {
         headers: {
           'Authorization': `Bearer ${token}`
@@ -1140,12 +1179,42 @@ const ReportGeneratorInterface = () => {
             )}
             {/* Success Message */}
             {compilationResult && (
-              <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+              <div className={`mb-6 p-4 border rounded-lg ${
+                compilationResult.status === 'completed' 
+                  ? 'bg-green-50 border-green-200' 
+                  : 'bg-yellow-50 border-yellow-200'
+              }`}>
                 <div className="flex items-center mb-2">
-                  <CheckCircle className="w-5 h-5 text-green-500 mr-2" />
-                  <p className="text-green-700 font-medium">Generation Successful!</p>
+                  {compilationResult.status === 'completed' ? (
+                    <CheckCircle className="w-5 h-5 text-green-500 mr-2" />
+                  ) : (
+                    <XCircle className="w-5 h-5 text-yellow-500 mr-2" />
+                  )}
+                  <p className={`font-medium ${
+                    compilationResult.status === 'completed' 
+                      ? 'text-green-700' 
+                      : 'text-yellow-700'
+                  }`}>
+                    {compilationResult.status === 'completed' 
+                      ? 'Generation Successful!' 
+                      : 'Partial Success - PDF Compilation Failed'}
+                  </p>
                 </div>
-                <p className="text-green-600">{compilationResult.message}</p>
+                <p className={
+                  compilationResult.status === 'completed' 
+                    ? 'text-green-600' 
+                    : 'text-yellow-600'
+                }>
+                  {compilationResult.message}
+                </p>
+                {compilationResult.status === 'partial' && (
+                  <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded">
+                    <p className="text-blue-700 text-sm">
+                      <strong>Good news:</strong> Your data has been successfully fetched and the ZIP archive is available for download. 
+                      You can download the ZIP file and compile the LaTeX project locally if needed.
+                    </p>
+                  </div>
+                )}
               </div>
             )}
             {/* Download Section */}
@@ -1155,87 +1224,107 @@ const ReportGeneratorInterface = () => {
                   Download Files
                 </h3>
                 <div className="grid md:grid-cols-3 gap-4 mb-6">
-                  {/* Report PDF Download */}
-                  <div className="bg-gray-700 p-6 rounded-lg border border-gray-600 flex flex-col">
-                    <div className="flex items-center mb-3">
-                      <FileText className="w-6 h-6 text-red-500 mr-2" />
-                      <h4 className="font-semibold text-white">Report PDF</h4>
+                  {/* Report PDF Download - Only show if compilation was completed */}
+                  {compilationResult.status === 'completed' && (compilationResult.pdf_available !== false) && (
+                    <div className="bg-gray-700 p-6 rounded-lg border border-gray-600 flex flex-col">
+                      <div className="flex items-center mb-3">
+                        <FileText className="w-6 h-6 text-red-500 mr-2" />
+                        <h4 className="font-semibold text-white">Report PDF</h4>
+                      </div>
+                      <p className="text-gray-300 mb-4 text-sm flex-grow">
+                        Download the compiled report PDF document
+                      </p>
+                      <button
+                        onClick={() => handleDownload('pdf', 'report')}
+                        disabled={isDownloading.pdf}
+                        className="w-full bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white font-medium py-2 px-4 rounded-md transition duration-300 flex items-center justify-center space-x-2 mt-auto"
+                      >
+                        {isDownloading.pdf ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            <span>Downloading...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Download className="w-4 h-4" />
+                            <span>Report</span>
+                          </>
+                        )}
+                      </button>
                     </div>
-                    <p className="text-gray-300 mb-4 text-sm flex-grow">
-                      Download the compiled report PDF document
-                    </p>
-                    <button
-                      onClick={() => handleDownload('pdf', 'report')}
-                      disabled={isDownloading.pdf}
-                      className="w-full bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white font-medium py-2 px-4 rounded-md transition duration-300 flex items-center justify-center space-x-2 mt-auto"
-                    >
-                      {isDownloading.pdf ? (
-                        <>
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                          <span>Downloading...</span>
-                        </>
-                      ) : (
-                        <>
-                          <Download className="w-4 h-4" />
-                          <span>Report</span>
-                        </>
-                      )}
-                    </button>
-                  </div>
-                  {/* Bibliography PDF Download */}
-                  <div className="bg-gray-700 p-6 rounded-lg border border-gray-600 flex flex-col">
-                    <div className="flex items-center mb-3">
-                      <FileText className="w-6 h-6 text-blue-500 mr-2" />
-                      <h4 className="font-semibold text-white">Bibliography PDF</h4>
+                  )}
+
+                  {/* Bibliography PDF Download - Only show if compilation was completed */}
+                  {compilationResult.status === 'completed' && (compilationResult.pdf_available !== false) && (
+                    <div className="bg-gray-700 p-6 rounded-lg border border-gray-600 flex flex-col">
+                      <div className="flex items-center mb-3">
+                        <FileText className="w-6 h-6 text-blue-500 mr-2" />
+                        <h4 className="font-semibold text-white">Bibliography PDF</h4>
+                      </div>
+                      <p className="text-gray-300 mb-4 text-sm flex-grow">
+                        Download the bibliography PDF document
+                      </p>
+                      <button
+                        onClick={() => handleDownload('pdf', 'biblio')}
+                        disabled={isDownloading.biblio}
+                        className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-medium py-2 px-4 rounded-md transition duration-300 flex items-center justify-center space-x-2 mt-auto"
+                      >
+                        {isDownloading.biblio ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            <span>Downloading...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Download className="w-4 h-4" />
+                            <span>Bibliography</span>
+                          </>
+                        )}
+                      </button>
                     </div>
-                    <p className="text-gray-300 mb-4 text-sm flex-grow">
-                      Download the bibliography PDF document
-                    </p>
-                    <button
-                      onClick={() => handleDownload('pdf', 'biblio')}
-                      disabled={isDownloading.biblio}
-                      className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-medium py-2 px-4 rounded-md transition duration-300 flex items-center justify-center space-x-2 mt-auto"
-                    >
-                      {isDownloading.biblio ? (
-                        <>
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                          <span>Downloading...</span>
-                        </>
-                      ) : (
-                        <>
-                          <Download className="w-4 h-4" />
-                          <span>Bibliography</span>
-                        </>
-                      )}
-                    </button>
-                  </div>
-                  {/* ZIP Download */}
-                  <div className="bg-gray-700 p-6 rounded-lg border border-gray-600 flex flex-col">
-                    <div className="flex items-center mb-3">
-                      <Archive className="w-6 h-6 text-orange-500 mr-2" />
-                      <h4 className="font-semibold text-white">Source Archive</h4>
+                  )}
+
+                  {/* ZIP Download - Always available for both completed and partial status */}
+                  {(compilationResult.zip_available !== false) && (
+                    <div className={`bg-gray-700 p-6 rounded-lg border border-gray-600 flex flex-col ${
+                      compilationResult.status === 'partial' ? 'md:col-span-3' : ''
+                    }`}>
+                      <div className="flex items-center mb-3">
+                        <Archive className="w-6 h-6 text-orange-500 mr-2" />
+                        <h4 className="font-semibold text-white">
+                          Source Archive
+                          {compilationResult.status === 'partial' && (
+                            <span className="ml-2 bg-yellow-500 text-yellow-900 px-2 py-1 rounded text-xs font-medium">
+                              Available
+                            </span>
+                          )}
+                        </h4>
+                      </div>
+                      <p className="text-gray-300 mb-4 text-sm flex-grow">
+                        {compilationResult.status === 'partial'
+                          ? 'Download the complete LaTeX project as ZIP. You can compile this locally to generate the PDF files.'
+                          : 'Download the complete LaTeX project as ZIP'
+                        }
+                      </p>
+                      <button
+                        onClick={() => handleDownload('zip')}
+                        disabled={isDownloading.zip}
+                        className="w-full bg-orange-600 hover:bg-orange-700 disabled:bg-orange-400 text-white font-medium py-2 px-4 rounded-md transition duration-300 flex items-center justify-center space-x-2 mt-auto"
+                      >
+                        {isDownloading.zip ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            <span>Downloading...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Download className="w-4 h-4" />
+                            <span>Download ZIP</span>
+                          </>
+                        )}
+                      </button>
                     </div>
-                    <p className="text-gray-300 mb-4 text-sm flex-grow">
-                      Download the complete LaTeX project as ZIP
-                    </p>
-                    <button
-                      onClick={() => handleDownload('zip')}
-                      disabled={isDownloading.zip}
-                      className="w-full bg-orange-600 hover:bg-orange-700 disabled:bg-orange-400 text-white font-medium py-2 px-4 rounded-md transition duration-300 flex items-center justify-center space-x-2 mt-auto"
-                    >
-                      {isDownloading.zip ? (
-                        <>
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                          <span>Downloading...</span>
-                        </>
-                      ) : (
-                        <>
-                          <Download className="w-4 h-4" />
-                          <span>ZIP</span>
-                        </>
-                      )}
-                    </button>
-                  </div>
+                  )}
                 </div>
               </div>
             )}
