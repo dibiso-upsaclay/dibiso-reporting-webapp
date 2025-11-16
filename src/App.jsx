@@ -19,9 +19,9 @@ const ReportGeneratorInterface = () => {
   // Form state for report generation
   const [formData, setFormData] = useState({
     year: (new Date().getFullYear() - 1).toString(),
-    labAcronym: '',
-    labName: '',
-    labId: '',
+    entityAcronym: '',
+    entityFullName: '',
+    entityId: '',
     maxEntities: 1000
   });
   // Form state for login and registration
@@ -191,8 +191,8 @@ const ReportGeneratorInterface = () => {
   };
 
   const validateForm = () => {
-    const { year, labAcronym, labName, labId, maxEntities } = formData;
-    if (!year || !labAcronym || !labName || !labId || !maxEntities) {
+    const { year, entityAcronym, entityFullName, entityId, maxEntities } = formData;
+    if (!year || !entityAcronym || !entityFullName || !entityId || !maxEntities) {
       setError('Please fill in all required fields');
       return false;
     }
@@ -491,9 +491,9 @@ const ReportGeneratorInterface = () => {
         },
         body: JSON.stringify({
           year: parseInt(formData.year),
-          lab_acronym: formData.labAcronym,
-          lab_name: formData.labName,
-          lab_id: formData.labId,
+          entity_acronym: formData.entityAcronym,
+          entity_full_name: formData.entityFullName,
+          entity_id: formData.entityId,
           max_entities: formData.maxEntities
         })
       });
@@ -519,7 +519,7 @@ const ReportGeneratorInterface = () => {
       let url;
       let downloadFileName;
 
-      const filePrefix = `${formData.year}_${formData.labAcronym}`;
+      const filePrefix = `${formData.year}_${formData.entityAcronym}`;
       const downloadId = compilationResult.temp_id || compilationId; // Fallback to compilationId
 
       if (type === 'pdf') {
@@ -1031,7 +1031,7 @@ const ReportGeneratorInterface = () => {
                 </div>
                 {/* Lab ID Input */}
                 <div>
-                  <label htmlFor="labId" className="block text-sm font-medium text-gray-300 mb-2">
+                  <label htmlFor="entityId" className="block text-sm font-medium text-gray-300 mb-2">
                     HAL collection ID <span className="text-red-400">*</span>
                     <span className="text-gray-500 font-light"> <br/>
                       The HAL collection ID used to fetch the data.
@@ -1039,9 +1039,9 @@ const ReportGeneratorInterface = () => {
                   </label>
                   <input
                     type="text"
-                    id="labId"
-                    name="labId"
-                    value={formData.labId}
+                    id="entityId"
+                    name="entityId"
+                    value={formData.entityId}
                     onChange={handleInputChange}
                     className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                     placeholder="e.g., LABORATOIRE-EXEMPLE"
@@ -1049,7 +1049,7 @@ const ReportGeneratorInterface = () => {
                 </div>
                 {/* Lab Acronym Input */}
                 <div>
-                  <label htmlFor="labAcronym" className="block text-sm font-medium text-gray-300 mb-2">
+                  <label htmlFor="entityAcronym" className="block text-sm font-medium text-gray-300 mb-2">
                     Lab Acronym <span className="text-red-400">*</span>
                     <span className="text-gray-500 font-light"> <br/>
                       The laboratory acronym that will be displayed on the title page.
@@ -1057,9 +1057,9 @@ const ReportGeneratorInterface = () => {
                   </label>
                   <input
                     type="text"
-                    id="labAcronym"
-                    name="labAcronym"
-                    value={formData.labAcronym}
+                    id="entityAcronym"
+                    name="entityAcronym"
+                    value={formData.entityAcronym}
                     onChange={handleInputChange}
                     className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                     placeholder="e.g., LABO"
@@ -1067,16 +1067,16 @@ const ReportGeneratorInterface = () => {
                 </div>
                 {/* Lab Name Input */}
                 <div>
-                  <label htmlFor="labName" className="block text-sm font-medium text-gray-300 mb-2">
+                  <label htmlFor="entityFullName" className="block text-sm font-medium text-gray-300 mb-2">
                     Lab Name <span className="text-red-400">*</span>
                     <span className="text-gray-500 font-light"> <br/>
                       The laboratory name that will be displayed on the title page.
                     </span>
                   </label>
                   <textarea
-                    id="labName"
-                    name="labName"
-                    value={formData.labName}
+                    id="entityFullName"
+                    name="entityFullName"
+                    value={formData.entityFullName}
                     onChange={handleInputChange}
                     rows={3}
                     className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent resize-vertical"
